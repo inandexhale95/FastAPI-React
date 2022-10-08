@@ -2,6 +2,7 @@ import fastapi as _fastapi
 import fastapi.security as _security
 import sqlalchemy.orm as _orm
 import passlib.hash as _hash
+import datetime
 import jwt
 
 import models as _models
@@ -61,3 +62,46 @@ async def get_current_user(
         raise _fastapi.HTTPException(status_code=401, detail="이메일이나 패스워드가 일치하지 않습니다.")
 
     return _schemas.User.from_orm(user)
+
+
+async def create_post(
+    post_data: _schemas.PostCreate, user: _schemas.User, db: _orm.Session
+):
+    post = _models.Post(**post_data.dict(), user_id=user.id)
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    return post
+
+
+async def get_post_one(
+    post_id: int, user: _schemas.User, db: _orm.Session
+) -> _models.Post:
+    post = (
+        db.query(_models.Post)
+        .filter_by(user_id=user.id)
+        .filter(_models.Post.id == post_id)
+        .first()
+    )
+
+    return post
+
+
+async def update_post(
+    post_id: int, post_data: _schemas.PostCreate, user: _schemas.User, db: _orm.Session
+):
+    post = await get_post_one(post_id, user, db)
+
+    post.title = post_data.title
+    post.content = post_data.content
+    post.date_last_updated = datetime.datetime.now()
+    db.commit()
+
+    return post
+
+
+async def delete_post(post_id: int, user: _schemas.User, db: _orm.Session):
+    post = await get_post_one(post_id, user, db)
+
+    db.delete(post)
+    db.commit()

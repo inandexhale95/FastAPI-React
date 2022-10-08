@@ -9,7 +9,11 @@ class _UserBase(_pydantic.BaseModel):
 
     @_pydantic.validator("email")
     def validate_email(cls, value):
-        _, email = _pydantic.validate_email(value)
+        front_word, email = _pydantic.validate_email(value)
+
+        if len(front_word) < 6:
+            raise ValueError("이메일 기호(@) 앞 아이디를 6자리 이상 입력해주세요.")
+
         return email
 
 
