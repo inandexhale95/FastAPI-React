@@ -8,9 +8,13 @@ import services as _services
 
 app = _fastapi.FastAPI()
 
+# @app.on_event("startup")
+
 
 @app.post("/api/users", response_model=_schemas.User)
-async def create_user(user: _schemas.UserCreate, db: _orm.Session = _fastapi.Depends(_services.get_db)):
+async def create_user(
+    user: _schemas.UserCreate, db: _orm.Session = _fastapi.Depends(_database.get_db)
+):
     db_user = await _services.get_user_by_email(user.email, db)
 
     if db_user:
@@ -21,8 +25,8 @@ async def create_user(user: _schemas.UserCreate, db: _orm.Session = _fastapi.Dep
 
 @app.post("/api/token")
 async def generate_token(
-        form_data: _security.OAuth2PasswordRequestForm = _fastapi.Depends(),
-        db: _orm.Session = _fastapi.Depends(_services.get_db)
+    form_data: _security.OAuth2PasswordRequestForm = _fastapi.Depends(),
+    db: _orm.Session = _fastapi.Depends(_database.get_db),
 ):
     user = await _services.authenticate_user(form_data.username, form_data.password, db)
 
