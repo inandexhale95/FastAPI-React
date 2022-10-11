@@ -18,12 +18,12 @@ async def get_user_by_email(user_email: str, db: _orm.Session) -> "_models.User"
     return db.query(_models.User).filter(_models.User.email == user_email).first()
 
 
-async def create_user(user: _schemas.UserCreate, db: _orm.Session):
+async def create_user(user_data: _schemas.UserCreate, db: _orm.Session):
     user_obj = _models.User(
-        email=user.email,
-        username=user.username,
-        company_name=user.company_name,
-        hashed_password=_hash.bcrypt.hash(user.hashed_password),
+        email=user_data.email,
+        username=user_data.username,
+        company_name=user_data.company_name,
+        hashed_password=_hash.bcrypt.hash(user_data.hashed_password),
     )
     db.add(user_obj)
     db.commit()
@@ -48,7 +48,7 @@ async def create_token(user: _models.User):
 
     token = jwt.encode(payload=user_obj.dict(), key=JWT_SECRET)
 
-    return dict(access_token=token, token_type="bearer")
+    return dict(access_token=token)
 
 
 async def get_current_user(

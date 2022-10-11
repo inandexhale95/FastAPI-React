@@ -32,7 +32,7 @@ class UserCreate(_UserBase):
         if not re.match(
             "^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{6,20}$", hashed_password
         ):
-            raise ValueError("특수문자와 알파벳이 각각 포함되어야 합니다.")
+            raise ValueError("비밀번호에 특수문자와 알파벳이 각각 포함되어야 합니다.")
 
         return values
 

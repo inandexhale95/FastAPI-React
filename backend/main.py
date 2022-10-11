@@ -1,5 +1,7 @@
 import fastapi as _fastapi
 import fastapi.security as _security
+from fastapi.middleware.cors import CORSMiddleware
+
 import sqlalchemy.orm as _orm
 
 import database as _database
@@ -8,19 +10,35 @@ import services as _services
 
 app = _fastapi.FastAPI()
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 # @app.on_event("startup")
+
+
+@app.get("/api")
+async def index():
+    return {"message": "Hello world!"}
 
 
 @app.post("/api/users")
 async def create_user(
-    user: _schemas.UserCreate, db: _orm.Session = _fastapi.Depends(_database.get_db)
+    user_data: _schemas.UserCreate,
+    db: _orm.Session = _fastapi.Depends(_database.get_db),
 ):
-    db_user = await _services.get_user_by_email(user.email, db)
+    db_user = await _services.get_user_by_email(user_data.email, db)
 
     if db_user:
         raise _fastapi.HTTPException(status_code=400, detail="이미 존재하는 이메일 입니다.")
 
-    await _services.create_user(user=user, db=db)
+    user = await _services.create_user(user_data=user_data, db=db)
 
     return await _services.create_token(user)
 
@@ -31,8 +49,6 @@ async def generate_token(
     db: _orm.Session = _fastapi.Depends(_database.get_db),
 ):
     user = await _services.authenticate_user(form_data.username, form_data.password, db)
-    print(user)
-    print(form_data)
 
     if not user:
         raise _fastapi.HTTPException(status_code=401, detail="인증에 실패했습니다.")
